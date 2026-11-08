@@ -695,6 +695,7 @@ const ICON = {
   back(c, x, y, s) { c.strokeStyle = PAL.cream; c.lineWidth = s * .14; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(x + s * .15, y - s * .35); c.lineTo(x - s * .22, y); c.lineTo(x + s * .15, y + s * .35); c.stroke(); },
   ball(c, x, y, s) { const r = s * .46; c.fillStyle = '#3b4a8c'; c.beginPath(); c.arc(x, y, r, Math.PI, 0); c.fill(); c.fillStyle = PAL.cream; c.beginPath(); c.arc(x, y, r, 0, Math.PI); c.fill(); c.fillStyle = PAL.ink; c.fillRect(x - r, y - s * .05, r * 2, s * .1); c.fillStyle = PAL.gold; c.beginPath(); c.arc(x, y, s * .15, 0, 7); c.fill(); ICON.star(c, x - s * .2, y - s * .24, s * .2, '#ffe9a8'); },
   gem(c, x, y, s) { c.fillStyle = '#6fd8e8'; c.beginPath(); c.moveTo(x - s * .32, y - s * .34); c.lineTo(x + s * .32, y - s * .34); c.lineTo(x + s * .5, y - s * .08); c.lineTo(x, y + s * .48); c.lineTo(x - s * .5, y - s * .08); c.closePath(); c.fill(); c.fillStyle = '#bff2f8'; c.beginPath(); c.moveTo(x - s * .32, y - s * .34); c.lineTo(x, y - s * .34); c.lineTo(x - s * .1, y - s * .08); c.lineTo(x - s * .5, y - s * .08); c.closePath(); c.fill(); c.fillStyle = '#3fa8c0'; c.beginPath(); c.moveTo(x + s * .1, y - s * .08); c.lineTo(x + s * .5, y - s * .08); c.lineTo(x, y + s * .48); c.closePath(); c.fill(); },
+  ring(c, x, y, s) { c.strokeStyle = PAL.gold; c.lineWidth = s * .13; c.beginPath(); c.arc(x, y + s * .1, s * .3, 0, 7); c.stroke(); c.fillStyle = '#e9b0c0'; c.beginPath(); c.moveTo(x, y - s * .48); c.lineTo(x + s * .18, y - s * .26); c.lineTo(x, y - s * .1); c.lineTo(x - s * .18, y - s * .26); c.closePath(); c.fill(); c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(x - s * .05, y - s * .38, s * .07, s * .1); },
   coin(c, x, y, s) { c.fillStyle = PAL.gold; c.beginPath(); c.arc(x, y, s * .46, 0, 7); c.fill(); c.fillStyle = '#c4943a'; c.beginPath(); c.arc(x, y, s * .3, 0, 7); c.fill(); c.fillStyle = PAL.gold; c.fillRect(x - s * .05, y - s * .2, s * .1, s * .4); },
 };
 
@@ -798,10 +799,11 @@ const PULL_COST = 3, TEN_COST = 27, PITY = 30;
 const GACHA = [
   { cat:'rare', cl:'レア仲間', id:'comet', w:1 }, { cat:'rare', cl:'レア仲間', id:'jelly', w:1 }, { cat:'rare', cl:'レア仲間', id:'drako', w:1 },
   ...WILD_ORDER.map(id => ({ cat:'comp', cl:'仲間', id, w:4.5 })),
-  { cat:'gear', cl:'装備', id:'wood', w:12 }, { cat:'gear', cl:'装備', id:'leather', w:10 }, { cat:'gear', cl:'装備', id:'iron', w:5 }, { cat:'gear', cl:'装備', id:'plate', w:2 }, { cat:'gear', cl:'装備', id:'star', w:1 },
+  { cat:'gear', cl:'装備', id:'wood', w:9 }, { cat:'gear', cl:'装備', id:'leather', w:8 }, { cat:'gear', cl:'装備', id:'iron', w:5 }, { cat:'gear', cl:'装備', id:'plate', w:2 }, { cat:'gear', cl:'装備', id:'star', w:1 },
+  { cat:'gear', cl:'装備', id:'power', w:2 }, { cat:'gear', cl:'装備', id:'guard', w:1.5 }, { cat:'gear', cl:'装備', id:'lure', w:1 }, { cat:'gear', cl:'装備', id:'sage', w:.5 },
   { cat:'item', cl:'アイテム', id:'herb', w:14 }, { cat:'item', cl:'アイテム', id:'ball', w:12 }, { cat:'item', cl:'アイテム', id:'water', w:8 }, { cat:'item', cl:'アイテム', id:'wing', w:4 }, { cat:'item', cl:'アイテム', id:'drop', w:2 },
 ];
-const GACHA_CLASS = ['レア仲間', '仲間', '装備', 'アイテム'].map(cl => ({ cl, w: GACHA.filter(q => q.cl === cl).reduce((a, q) => a + q.w, 0) }));
+const GACHA_CLASS = ['レア仲間', '仲間', '装備', 'アイテム'].map(cl => ({ cl, w: Math.round(GACHA.filter(q => q.cl === cl).reduce((a, q) => a + q.w, 0) * 100) / 100 }));
 /* ジェムパック（デモ）。実決済には接続していない */
 const PACKS = [
   { id:'p120', yen:120, gems:10, name:'ひとにぎりの星屑' },
@@ -927,17 +929,58 @@ Object.assign(ENC, {
 WILD_ORDER.push(...NEW_WILD); COMP_ORDER.splice(CH_WILD[1].length, 0, ...NEW_WILD);
 BOOK_ORDER.length = 0; for (let c = 1; c <= 5; c++) BOOK_ORDER.push(...CH_WILD[c], CH_BOSS[c]); BOOK_ORDER.push(...RARE_ORDER);
 Object.assign(WEAPONS, {
+  seablade: { name:'しおかぜの剣', atk:20, tier:3.5, price:1100, col:'#8fd0e8', desc:'潮風で鍛えた細身の剣。港の船乗りに人気。' },
   coral:  { name:'さんごの剣', atk:24, tier:4, price:1600, col:'#f08ab0', desc:'港の鍛冶屋がサンゴで鍛えた剣。水の上でも錆びない。' },
+  scorpion: { name:'サソリの短刀', atk:28, tier:4.5, price:2400, col:'#d8a060', desc:'砂漠サソリの針を打ちなおした短刀。すばやく突ける。' },
   sun:    { name:'たいようの曲刀', atk:32, tier:5, price:3600, col:'#ffd060', desc:'砂漠の太陽を映す曲刀。ひと振りで砂嵐を切りさく。' },
+  sandfang: { name:'砂竜のキバ', atk:36, tier:5.5, col:'#e0c890', desc:'遺跡の宝箱に眠っていた、砂竜のキバの剣。' },
   frost:  { name:'こおりの大剣', atk:42, tier:6, price:7200, col:'#a8e4f0', desc:'とけない氷の大剣。見た目より軽い。' },
+  dragonfang: { name:'氷竜のつるぎ', atk:48, tier:6.5, col:'#bfe8ff', desc:'氷竜が友のしるしにくれた牙の剣。冷たいのに手になじむ。' },
+  hammer: { name:'いんせきの大づち', atk:50, tier:6.7, price:9600, col:'#9a8aa8', desc:'落ちてきた星のかけらを打ちこんだ大づち。とても重い。' },
   astral: { name:'星海の剣', atk:54, tier:7, price:12000, col:'#c9b6f0', desc:'夜空を流れる星の川から鍛えた、最後の剣。' },
+  nova:   { name:'新星のつるぎ', atk:60, tier:8, col:'#fff0a0', desc:'星の塔の最上階で輝いていた、生まれたての星の剣。' },
 });
 Object.assign(ARMORS, {
+  pearl:    { name:'しんじゅの胸あて', def:9, tier:2.5, price:900, desc:'真珠をちりばめた胸あて。軽くて丈夫。' },
   shell:    { name:'かいがらのよろい', def:11, tier:3, price:1300, desc:'大きな貝がらをつなぎあわせた、波にも強いよろい。' },
+  scale:    { name:'トカゲうろこの鎧', def:14, tier:3.5, price:2100, desc:'砂トカゲのうろこを重ねた鎧。熱をよせつけない。' },
   desert:   { name:'砂漠のマント', def:16, tier:4, price:3000, desc:'熱も砂もはね返す、隊商ゆずりのマント。' },
   fur:      { name:'ゆきうさぎの毛皮', def:22, tier:5, price:6200, desc:'ぬけ落ちた毛で編んだ、あたたかい防具。' },
+  icemail:  { name:'氷結のよろい', def:24, tier:5.5, desc:'氷の神殿の宝箱にあった、とけない氷のよろい。' },
+  aurora:   { name:'オーロラの衣', def:26, tier:5.7, price:8400, desc:'オーロラの光を織りこんだ衣。身につけると心が落ちつく。' },
   starrobe: { name:'星読みのローブ', def:29, tier:6, price:10500, desc:'星読みが織った、夜の光を宿すローブ。' },
+  galaxy:   { name:'銀河のよろい', def:33, tier:7, desc:'光の階段に落ちていた、銀河の色をしたよろい。' },
 });
+/* アクセサリ（ルミナ専用の3つ目の枠）。効果は stat() / catchRate / tryFlee / win で反映 */
+const ACCS = {
+  lure:  { name:'ほしよびの鈴', price:1500, tier:1, eff:{ cap:.1 }, desc:'リンと鳴ると野生のモンスターが心をゆるす。ほし玉の成功率+10%。' },
+  swift: { name:'はやてのアンクレット', price:2200, tier:1, eff:{ flee:.2 }, desc:'風のように足が軽くなる。にげる成功率 75%→95%。' },
+  power: { name:'ちからのゆびわ', price:1800, tier:2, eff:{ atk:6 }, desc:'はめると腕に力がみなぎる指輪。攻撃力+6。' },
+  guard: { name:'まもりのブローチ', price:1800, tier:2, eff:{ def:5 }, desc:'小さな盾の形のブローチ。防御力+5。' },
+  mana:  { name:'まりょくのイヤリング', tier:3, eff:{ mpP:.25 }, desc:'遺跡の魔力が宿った耳かざり。最大MP+25%。' },
+  sage:  { name:'けんじゃのメダル', price:4000, tier:3, eff:{ exp:.1 }, desc:'学ぶ心を助けるメダル。もらえるEXP+10%（仲間にも）。' },
+  life:  { name:'いのちのペンダント', price:4500, tier:3, eff:{ hpP:.15 }, desc:'あたたかい鼓動を感じるペンダント。最大HP+15%。' },
+  charm: { name:'星のおまもり', tier:4, eff:{ atk:5, def:5, hpP:.1 }, desc:'雪原で見つけた星のおまもり。攻撃+5 防御+5 最大HP+10%。' },
+  hero:  { name:'ゆうしゃのあかし', price:11000, tier:5, eff:{ atk:12 }, desc:'星の勇者だけが身につけられる紋章。攻撃力+12。' },
+};
+const ACC_ORDER = Object.keys(ACCS);
+const SLOTS = [['weapon', '武器', WEAPONS], ['armor', 'よろい', ARMORS], ['acc', 'アクセサリ', ACCS]];
+const gearSlot = id => WEAPONS[id] ? 'weapon' : ARMORS[id] ? 'armor' : ACCS[id] ? 'acc' : null;
+const gearDef = id => WEAPONS[id] || ARMORS[id] || ACCS[id];
+function effText(d, short) { // 装備の効果を文字にする
+  if (!d) return '';
+  if (d.atk !== undefined && !d.eff) return `攻撃+${d.atk}`;
+  if (d.def !== undefined && !d.eff) return `防御+${d.def}`;
+  const e = d.eff || {}, o = [];
+  if (e.atk) o.push(`攻撃+${e.atk}`); if (e.def) o.push(`防御+${e.def}`);
+  if (e.hpP) o.push(`HP+${Math.round(e.hpP * 100)}%`); if (e.mpP) o.push(`MP+${Math.round(e.mpP * 100)}%`);
+  if (e.exp) o.push(`EXP+${Math.round(e.exp * 100)}%`); if (e.cap) o.push(short ? `捕獲+${Math.round(e.cap * 100)}%` : `捕獲率+${Math.round(e.cap * 100)}%`);
+  if (e.flee) o.push(short ? '逃走UP' : 'にげる成功UP');
+  return o.join(' ');
+}
+/* 宝箱・ボスからの装備（既に開けた宝箱はセーブ移行時に補填する） */
+const CHEST_GEAR = { chestF:'swift', chestK:'mana', chestL:'sandfang', chestN:'charm', chestO:'icemail', chestQ:'galaxy', chestR:'nova' };
+const BOSS_GEAR = { fdDown:'dragonfang' };
 Object.assign(ITEMS, {
   hiherb: { name:'ハイやくそう', price:280, icon:'herb', desc:'HPを250回復する。', use:{ hp:250 } },
   ether:  { name:'まほうのせいすい', price:420, icon:'flask', desc:'MPを50回復する。', use:{ mp:50 } },
@@ -1323,10 +1366,10 @@ const TOWNS = {
 };
 const SHOP = {
   village:  { item:['herb', 'water', 'ball', 'wing'], gear:['wood', 'iron', 'star', 'leather', 'plate'] },
-  port:     { item:['herb', 'hiherb', 'water', 'ether', 'ball', 'wing'], gear:['star', 'coral', 'plate', 'shell'] },
-  oasis:    { item:['hiherb', 'water', 'ether', 'ball', 'wing'], gear:['coral', 'sun', 'shell', 'desert'] },
-  snow:     { item:['hiherb', 'ether', 'drop', 'ball', 'wing'], gear:['sun', 'frost', 'desert', 'fur'] },
-  starhill: { item:['hiherb', 'ether', 'drop', 'ball', 'wing'], gear:['frost', 'astral', 'fur', 'starrobe'] },
+  port:     { item:['herb', 'hiherb', 'water', 'ether', 'ball', 'wing'], gear:['star', 'seablade', 'coral', 'plate', 'pearl', 'shell', 'lure'] },
+  oasis:    { item:['hiherb', 'water', 'ether', 'ball', 'wing'], gear:['coral', 'scorpion', 'sun', 'shell', 'scale', 'desert', 'power', 'guard', 'swift'] },
+  snow:     { item:['hiherb', 'ether', 'drop', 'ball', 'wing'], gear:['sun', 'frost', 'desert', 'fur', 'life', 'sage'] },
+  starhill: { item:['hiherb', 'ether', 'drop', 'ball', 'wing'], gear:['frost', 'hammer', 'astral', 'fur', 'aurora', 'starrobe', 'hero'] },
 };
 ITEMS.drop.price = 1200;
 
@@ -1344,15 +1387,16 @@ function rawSaves() { const o = []; try { for (const k of [SAVE_KEY, SAVE_KEY_V1
 function hasSave() { return rawSaves().length > 0; }
 const clone = o => JSON.parse(JSON.stringify(o));
 function baseState(diff) {
-  return { v:2, diff, lv:1, exp:0, hp:LV.hp[1], mp:LV.mp[1], gold:200, weapon:'stick', armor:'cloth', items:{ herb:2, water:0, drop:0, wing:0, ball:3, hiherb:0, ether:0 },
+  return { v:2, diff, lv:1, exp:0, hp:LV.hp[1], mp:LV.mp[1], gold:200, weapon:'stick', armor:'cloth', acc:'', gear:{ stick:1, cloth:1 }, items:{ herb:2, water:0, drop:0, wing:0, ball:3, hiherb:0, ether:0 },
     flags:{}, opened:{}, book:{}, seen:{}, caught:{}, comps:{}, party:[], kills:0, time:0, battles:0, map:'village', x:16.5*TS, y:11.5*TS, dir:'u', respawn:{ map:'village', x:27.5*TS, y:10.5*TS }, tips:{}, encSteps:7, town:'village' };
 }
 function newState(diff) {
   const st = baseState(diff), c = meta.carry;
   if (diff === 'hard' && c) {
-    Object.assign(st, { lv:c.lv, exp:LV.exp[c.lv], weapon:c.weapon, armor:c.armor, gold:c.gold, hp:LV.hp[c.lv], mp:LV.mp[c.lv], book:c.book || {}, seen:c.seen || {}, caught:c.caught || {}, comps:clone(c.comps || {}), party:(c.party || []).slice() });
+    Object.assign(st, { lv:c.lv, exp:LV.exp[c.lv], weapon:c.weapon, armor:c.armor, acc:c.acc || '', gear:Object.assign(st.gear, c.gear || {}), gold:c.gold, hp:LV.hp[c.lv], mp:LV.mp[c.lv], book:c.book || {}, seen:c.seen || {}, caught:c.caught || {}, comps:clone(c.comps || {}), party:(c.party || []).slice() });
     for (const k in c.book || {}) st.seen[k] = 1;
   }
+  fixGear(st);
   for (const k in meta.acct.gachaOwned) if (SPECIES[k] && !st.comps[k]) { // ガチャで迎えた仲間はニューゲームでも一緒
     const lv = Math.min(SPECIES[k].lv0 || 1, 3), q = { lv, exp:LV.exp[lv], hp:1, mp:0 }, cs = compStat(k, q); q.hp = cs.maxHp; q.mp = cs.maxMp; // 後半の種族もLv3までで合流
     st.comps[k] = q; st.seen[k] = st.caught[k] = 1;
@@ -1374,8 +1418,23 @@ function migrate(d) {
   r.party = (Array.isArray(d.party) ? d.party : []).filter((k, i, a) => r.comps[k] && a.indexOf(k) === i).slice(0, MAX_PARTY);
   if (!TOWNS[r.town]) r.town = 'village';
   if (!r.respawn || !MAPS[r.respawn.map]) r.respawn = b.respawn;
+  r.gear = Object.assign({ stick:1, cloth:1 }, d.gear && typeof d.gear === 'object' ? d.gear : {});
+  for (const c in CHEST_GEAR) if (r.opened[c]) r.gear[CHEST_GEAR[c]] = 1; // 装備が追加される前に開けた宝箱の分
+  for (const f in BOSS_GEAR) if (r.flags[f]) r.gear[BOSS_GEAR[f]] = 1;
+  fixGear(r);
   return r;
 }
+/* 装備の整合: 装備中のものは必ず所持品に入れる（v2前半のセーブは武器・防具がここで所持品になる）。未知のIDは捨てる */
+function fixGear(r) {
+  if (!r.gear || typeof r.gear !== 'object') r.gear = {};
+  for (const k in r.gear) if (!gearDef(k) || !r.gear[k]) delete r.gear[k];
+  if (!WEAPONS[r.weapon]) r.weapon = 'stick';
+  if (!ARMORS[r.armor]) r.armor = 'cloth';
+  if (!ACCS[r.acc]) r.acc = '';
+  r.gear[r.weapon] = 1; r.gear[r.armor] = 1; if (r.acc) r.gear[r.acc] = 1;
+  return r;
+}
+function gainGear(id) { const n = !s.gear[id]; s.gear[id] = 1; return n; } // 新しく手に入れたら true
 let s = null; // 現在のセーブ状態
 function writeSave(silent) {
   if (!s) return false;
@@ -1390,7 +1449,16 @@ function readSave() {
   }
   return null;
 }
-const stat = () => ({ maxHp: LV.hp[s.lv], maxMp: LV.mp[s.lv], atk: LV.atk[s.lv] + WEAPONS[s.weapon].atk, def: LV.def[s.lv] + ARMORS[s.armor].def });
+function stat(o) { // o で装備を差しかえた場合の能力も計算できる（装備画面のプレビュー用）
+  const wp = WEAPONS[(o && o.weapon) || s.weapon] || WEAPONS.stick, ar = ARMORS[(o && o.armor) || s.armor] || ARMORS.cloth;
+  const ac = ACCS[o && o.acc !== undefined ? o.acc : s.acc], e = (ac && ac.eff) || {};
+  return { maxHp: Math.round(LV.hp[s.lv] * (1 + (e.hpP || 0))), maxMp: Math.round(LV.mp[s.lv] * (1 + (e.mpP || 0))), atk: LV.atk[s.lv] + wp.atk + (e.atk || 0), def: LV.def[s.lv] + ar.def + (e.def || 0),
+    exp: e.exp || 0, cap: e.cap || 0, flee: e.flee || 0 };
+}
+function equip(slot, id) { // 装備を変える。HP/MPの上限が下がったら切りつめる
+  if (slot === 'acc') s.acc = id || ''; else if (id) s[slot] = id;
+  const st = stat(); s.hp = Math.min(s.hp, st.maxHp); s.mp = Math.min(s.mp, st.maxMp);
+}
 
 /* ============ 仲間 / 絆 ============ */
 function bondLv(k) { const p = meta.acct.bonds[k] || 0; let l = 0; while (l < BOND_MAX && p >= BOND_NEED[l + 1]) l++; return l; }
@@ -1506,6 +1574,46 @@ function wrap(text, maxW, sz) {
   });
   wrapCache.set(key, out); return out;
 }
+/* ===== fitText: キャンバスのボタン・ラベルに文字を収める =====
+   1) 1行のまま 1px ずつ縮小（下限 min1）→ 2) 高さに余裕があれば2行に折って縮小（下限 min2）→ 3) それでも無理なら省略記号… */
+const fitLog = []; // ?debug: 省略が必要になった（＝収まらなかった）文字列の記録
+const KINSOKU = '、。！？」』）…ーっゃゅょァィゥェォッャュョ）】・';
+function measureAt(t, z, bold) { g.font = font(z, bold); return g.measureText(t).width; }
+function ellipsize(t, maxW, z, bold) {
+  if (measureAt(t, z, bold) <= maxW) return t;
+  if (DEBUG && fitLog.length < 50) fitLog.push(t);
+  let u = t; while (u.length > 1 && measureAt(u + '…', z, bold) > maxW) u = u.slice(0, -1);
+  return u + '…';
+}
+const fitCache = new Map();
+function fitLines(t, maxW, maxH, sz, bold, minSz) {
+  t = String(t); const key = `${t}|${maxW | 0}|${maxH | 0}|${sz}|${bold ? 1 : 0}|${minSz || 0}`; if (fitCache.has(key)) return fitCache.get(key);
+  const min1 = Math.min(sz, minSz || Math.max(12, Math.round(sz * .72))), min2 = Math.max(11, Math.min(min1, Math.round(sz * .62))), br = t.indexOf('\n');
+  let out = null;
+  if (br < 0) for (let z = sz; z >= min1; z--) if (measureAt(t, z, bold) <= maxW) { out = { lines: [t], sz: z }; break; }
+  if (!out && maxH >= min2 * 2.3) { // 2行に折る（明示の改行を優先、なければ幅が最もそろう位置。行頭禁則あり）
+    const flat = t.replace('\n', ''), cuts = br >= 0 ? [br] : [];
+    if (br < 0) for (let i = 1; i < flat.length; i++) if (!KINSOKU.includes(flat[i])) cuts.push(i);
+    for (let z = Math.min(sz, Math.floor(maxH / 2.3)); z >= min2 && !out; z--) {
+      let best = null, bw = 1e9;
+      for (const c of cuts) { const a = flat.slice(0, c), b = flat.slice(c), w = Math.max(measureAt(a, z, bold), measureAt(b, z, bold)); if (w < bw) { bw = w; best = [a, b]; } }
+      if (best && bw <= maxW) out = { lines: best, sz: z };
+    }
+  }
+  if (!out) { const z = br >= 0 ? min2 : min1, one = t.replace('\n', ''); out = { lines: [ellipsize(one, maxW, z, bold)], sz: z }; }
+  if (fitCache.size > 600) fitCache.clear();
+  fitCache.set(key, out); return out;
+}
+/* 1行ラベル: 幅 maxW に収まるまで縮小、下限で省略。戻り値は使ったサイズ */
+function fitT(t, x, y, maxW, sz = 20, col = PAL.cream, al = 'left', bold = false, stroke = null, minSz) {
+  const f = fitLines(t, maxW, 0, sz, bold, minSz); T(f.lines[0], x, y, f.sz, col, al, bold, stroke); return f.sz;
+}
+/* 矩形 r の中に収める（中央そろえ・必要なら2行） */
+function fitBox(t, r, sz, col = PAL.cream, bold = true, pad = 10, al = 'center') {
+  const f = fitLines(t, r.w - pad * 2, r.h - 8, sz, bold), lh = f.sz * 1.15, cy = r.y + r.h / 2, x = al === 'center' ? r.x + r.w / 2 : al === 'left' ? r.x + pad : r.x + r.w - pad;
+  f.lines.forEach((l, i) => T(l, x, cy + (i - (f.lines.length - 1) / 2) * lh, f.sz, col, al, bold));
+  return f;
+}
 function iconFor(id, x, y, sz) {
   const c = g, n = id;
   if (n === 'herb') ICON.herb(c, x, y, sz); else if (n === 'flask') ICON.flask(c, x, y, sz);
@@ -1514,7 +1622,10 @@ function iconFor(id, x, y, sz) {
   else if (n === 'star') ICON.star(c, x, y, sz); else if (n === 'bag') ICON.bag(c, x, y, sz);
   else if (n === 'boot') ICON.boot(c, x, y, sz); else if (n === 'back') ICON.back(c, x, y, sz);
   else if (n === 'ball') ICON.ball(c, x, y, sz); else if (n === 'gem') ICON.gem(c, x, y, sz);
+  else if (n === 'ring') ICON.ring(c, x, y, sz);
 }
+const gearIcon = id => ({ weapon: 'sword', armor: 'armor', acc: 'ring' })[gearSlot(id)];
+function drawGearIcon(id, x, y, sz) { if (WEAPONS[id]) ICON.sword(g, x, y, sz, WEAPONS[id].col); else iconFor(gearIcon(id) || 'ring', x, y, sz); }
 function mkMenu(items, o) { return Object.assign({ items, sel: 0, x: 0, y: 0, w: 200, rowH: 54, cols: 1, gap: 8, sz: 22, confirmTap: false, per: 0, pager: null }, o); }
 /* ページ送り: per 件ずつ表示し、pager の位置に ◀ ▶ ボタンを出す（20種をこえる図鑑・仲間用） */
 const pageOf = m => m.per ? Math.floor(m.sel / m.per) : 0;
@@ -1562,17 +1673,19 @@ function menuDraw(m) {
     g.fillStyle = sel ? 'rgba(184,89,58,.95)' : (m.flat ? 'rgba(255,255,255,.06)' : 'rgba(28,35,64,.9)'); g.fill();
     g.lineWidth = sel ? 3 : 2; g.strokeStyle = sel ? PAL.gold : 'rgba(244,231,200,.45)'; g.stroke();
     const col = it.disabled ? 'rgba(244,231,200,.42)' : PAL.cream, cy = r.y + r.h / 2;
-    let tx = r.x + 16;
-    if (it.icon) { iconFor(it.icon, r.x + 28, cy, Math.min(34, r.h * .6)); tx = r.x + 52; }
-    if (m.center) T(it.label, r.x + r.w / 2 + (it.icon ? 14 : 0), cy, m.sz, col, 'center', true);
-    else T(it.label, tx, cy, m.sz, col, 'left', sel);
-    if (it.r) T(it.r, r.x + r.w - 14, cy, Math.max(15, m.sz - 3), it.rc || col, 'right');
+    const ic = it.icon ? Math.min(34, r.h * .6, r.w * .2) : 0, pad = r.w < 120 ? 6 : 12;
+    let tx = r.x + pad, rw = 0;
+    if (it.icon) { iconFor(it.icon, r.x + pad + ic / 2, cy, ic); tx = r.x + pad + ic + 6; }
+    if (it.r) { const rz = fitT(it.r, r.x + r.w - pad, cy, r.w * .42, Math.max(15, m.sz - 3), it.rc || col, 'right'); rw = measureAt(it.r, rz) + 10; } // 右の数値は最大4割
+    const bold = m.center || sel, lr = { x: tx, y: r.y, w: r.x + r.w - pad - rw - tx, h: r.h };
+    if (m.center && !it.r) { lr.x = r.x + pad + (it.icon ? ic + 6 : 0); lr.w = r.w - pad * 2 - (it.icon ? ic + 6 : 0); fitBox(it.label, lr, m.sz, col, true, 2); }
+    else fitBox(it.label, lr, m.sz, col, bold, 0, 'left');
   });
 }
 function backButton(x, y, w = 150, h = 58) { return { x, y, w, h }; }
 function drawBack(r, label = 'もどる') {
   rr(r.x, r.y, r.w, r.h, 10); g.fillStyle = 'rgba(63,91,60,.95)'; g.fill(); g.lineWidth = 2; g.strokeStyle = PAL.cream; g.stroke();
-  ICON.back(g, r.x + 26, r.y + r.h / 2, 26); T(label, r.x + r.w / 2 + 12, r.y + r.h / 2, 20, PAL.cream, 'center', true);
+  ICON.back(g, r.x + 26, r.y + r.h / 2, 26); fitBox(label, { x: r.x + 44, y: r.y, w: r.w - 50, h: r.h }, 20, PAL.cream, true, 4);
 }
 
 /* ============ シーン / レイヤー管理 ============ */
@@ -1597,7 +1710,7 @@ const Dialog = (list, then) => ({
     if (this.i >= this.list.length) return;
     const cur = this.parse(), B = Dialog.BOX;
     panel(B.x, B.y, B.w, B.h, .95);
-    if (cur.name) { panel(B.x + 14, B.y - 26, Math.max(120, cur.name.length * 22 + 36), 40, 1); T(cur.name, B.x + 32, B.y - 6, 20, PAL.gold, 'left', true); }
+    if (cur.name) { const nw = Math.min(B.w - 28, Math.max(120, measureAt(cur.name, 20, true) + 40)); panel(B.x + 14, B.y - 26, nw, 40, 1); fitT(cur.name, B.x + 32, B.y - 6, nw - 36, 20, PAL.gold, 'left', true); }
     let left = Math.floor(this.n), y = B.y + 38 + (cur.name ? 4 : 0);
     for (const ln of wrap(cur.text, Dialog.TW, 23)) { if (left <= 0) break; T(ln.slice(0, left), B.x + 24, y, 23); left -= ln.length; y += 34; }
     if (this.n >= wrap(cur.text, Dialog.TW, 23).join('').length) { const a = Math.sin(performance.now() / 160) * 3; g.fillStyle = PAL.gold; g.beginPath(); g.moveTo(B.x + B.w - 34, B.y + B.h - 28 + a); g.lineTo(B.x + B.w - 18, B.y + B.h - 28 + a); g.lineTo(B.x + B.w - 26, B.y + B.h - 18 + a); g.fill(); }
@@ -1841,15 +1954,15 @@ const Field = {
     ICON.coin(g, 200, 32, 18); T(`${s.gold}G`, 270, 32, 18, PAL.cream, 'right');
     T('HP', 26, 58, 14, PAL.cream); bar(52, 51, 150, 13, s.hp, st.maxHp, '#7fbf6a'); T(`${s.hp}/${st.maxHp}`, 270, 58, 14, PAL.cream, 'right');
     T('MP', 26, 78, 14, PAL.cream); bar(52, 71, 150, 13, s.mp, st.maxMp, '#6a9fd8'); T(`${s.mp}/${st.maxMp}`, 270, 78, 14, PAL.cream, 'right');
-    const obj = this.objective().t; g.font = font(16, true); const tw = g.measureText(obj).width;
+    const obj = this.objective().t, tw = Math.min(measureAt(obj, 16, true), 560);
     rr(10, 102, tw + 60, 32, 10); g.fillStyle = 'rgba(28,35,64,.78)'; g.fill();
     for (let i = 0; i < 3; i++) { /* 欠片スロット */ }
-    ICON.star(g, 30, 118, 20, PAL.gold); T(obj, 46, 118, 16, PAL.cream, 'left', true);
+    ICON.star(g, 30, 118, 20, PAL.gold); fitT(obj, 46, 118, tw + 6, 16, PAL.cream, 'left', true);
     const pw = 92 + s.party.length * 80;
     rr(10, 138, pw, 30, 10); g.fillStyle = 'rgba(28,35,64,.78)'; g.fill(); ICON.gem(g, 28, 153, 18); T(String(meta.acct.gems), 42, 154, 16, PAL.cream, 'left', true);
     s.party.forEach((k, i) => { const c = s.comps[k]; bar(96 + i * 80, 148, 70, 11, c.hp, compStat(k, c).maxHp, '#7fbf6a'); });
-    if (this.banner > 0) { const a = clamp(Math.min(this.banner, 2.2 - this.banner) * 3, 0, 1); g.globalAlpha = a; panel(W / 2 - 150, 150, 300, 58, .86); T(this.map.name, W / 2, 180, 26, PAL.gold, 'center', true); g.globalAlpha = 1; }
-    if (this.hint && !Scene.top()) { g.font = font(17, true); const w = g.measureText(this.hint.text).width + 44; rr(W / 2 - w / 2, 486, w, 36, 18); g.fillStyle = 'rgba(28,35,64,.85)'; g.fill(); T(this.hint.text, W / 2, 504, 17, PAL.cream, 'center', true); }
+    if (this.banner > 0) { const a = clamp(Math.min(this.banner, 2.2 - this.banner) * 3, 0, 1); g.globalAlpha = a; panel(W / 2 - 150, 150, 300, 58, .86); fitT(this.map.name, W / 2, 180, 270, 26, PAL.gold, 'center', true); g.globalAlpha = 1; }
+    if (this.hint && !Scene.top()) { const w = Math.min(measureAt(this.hint.text, 17, true) + 44, 900); rr(W / 2 - w / 2, 486, w, 36, 18); g.fillStyle = 'rgba(28,35,64,.85)'; g.fill(); fitT(this.hint.text, W / 2, 504, w - 36, 17, PAL.cream, 'center', true); }
   },
 };
 
@@ -1917,6 +2030,7 @@ function openChest(id, loot) {
   const msg = [];
   if (loot.gold) { s.gold += loot.gold; msg.push(`宝箱から ${loot.gold}G を見つけた！`); }
   if (loot.items) for (const k in loot.items) { s.items[k] += loot.items[k]; msg.push(`宝箱から ${ITEMS[k].name} ×${loot.items[k]} を見つけた！`); }
+  const gid = CHEST_GEAR[id]; if (gid) { gainGear(gid); msg.push(`宝箱から ${gearDef(gid).name} を見つけた！`, `（${effText(gearDef(gid))}。メニューの「そうび」で装備できる）`); }
   writeSave(true); say(msg);
 }
 function takeShard1() {
@@ -2013,7 +2127,7 @@ function townEnts(add, town) {
   const T0 = TOWNS[town];
   if (T0.inn.at) add('inn', 'npc', T0.inn.at[0], T0.inn.at[1], { spr: 'inn', on: () => talkInnAt(town) });
   if (T0.shop) add('merchant', 'npc', T0.shop[0], T0.shop[1], { spr: T0.shop[2], on: () => say([`${T0.shop[3]}|いらっしゃい！ 旅の準備はここでどうぞ。`], () => openShop('item', town)) });
-  if (T0.gear) add('smith', 'npc', T0.gear[0], T0.gear[1], { spr: T0.gear[2], on: () => say([`${T0.gear[3]}|この町いちばんの武具だ。買えばその場で装備してやる。`], () => openShop('gear', town)) });
+  if (T0.gear) add('smith', 'npc', T0.gear[0], T0.gear[1], { spr: T0.gear[2], on: () => say([`${T0.gear[3]}|この町いちばんの武具だ。買った装備は持ち物に入る。すぐ装備もできるぜ。`], () => openShop('gear', town)) });
   if (T0.gacha) add('gacha', 'gacha', T0.gacha[0], T0.gacha[1], { on: () => { Snd.se('ok'); openGacha(); } });
   if (shards() >= 1) add('travel', 'npc', T0.travel[0], T0.travel[1], { spr: T0.travel[2], on: () => talkTravel(town) });
 }
@@ -2021,7 +2135,7 @@ const MAP_ENTS = {
   village(add, f) {
     add('elder', 'npc', 16, 8, { spr: 'elder', on: talkElder });
     add('merchant', 'npc', 7, 8, { spr: 'merchant', on: () => { say(['道具屋ララ|いらっしゃい！ 冒険のおともを選んでいって。'], () => openShop('item')); } });
-    add('smith', 'npc', 7, 19, { spr: 'smith', on: () => { say(['鍛冶屋ゴンザ|おう、いい鉄が入ってるぜ。買えばその場で装備してやる。'], () => openShop('gear')); } });
+    add('smith', 'npc', 7, 19, { spr: 'smith', on: () => { say(['鍛冶屋ゴンザ|おう、いい鉄が入ってるぜ。買った装備は持ち物に入る。すぐ装備もできるぜ。'], () => openShop('gear')); } });
     add('inn', 'npc', 27, 8, { spr: 'inn', on: talkInn });
     add('granny', 'npc', 13, 8.6, { spr: 'granny', on: () => say(f.shard1 ? ['村のおばあ|欠片に力をもらったようだねえ。ヒールは早めに使うんだよ。', '村のおばあ|ボスの前では、やくそうを多めにね。'] : ['村のおばあ|森の敵は、火に弱いものが多いよ。', '村のおばあ|コウモリやオオカミのような闇の者には、森の力だねえ。']) });
     add('boy', 'npc', 22, 11, { spr: 'boy', on: () => say(f.shard2 ? ['村の子ども|魔王って、怒ると弱点が変わるんだって！ ほんとかな？'] : ['村の子ども|Bボタンを長押しすると走れるんだよ！', '村の子ども|モンスターはね、弱らせて ほし玉をなげると仲間になるよ！']) });
@@ -2237,7 +2351,7 @@ const BOSS_TALK = {
 };
 const BOSS_FLAG = { kraken: 'krakenDown', sgking: 'sgkDown', fdragon: 'fdDown', nox: 'noxDown' };
 function bossFight(id, ch) {
-  say(BOSS_TALK[id], () => Battle.start([id], { fixed: true, boss: true, final: ch === 5, onWin() { s.flags[BOSS_FLAG[id]] = 1; }, after: ch < 5 ? () => chapterClear(ch) : null }));
+  say(BOSS_TALK[id], () => Battle.start([id], { fixed: true, boss: true, final: ch === 5, onWin() { s.flags[BOSS_FLAG[id]] = 1; const gid = BOSS_GEAR[BOSS_FLAG[id]]; if (gid && gainGear(gid)) toast(`${gearDef(gid).name}を手に入れた！`); }, after: ch < 5 ? () => chapterClear(ch) : null }));
 }
 /* 章クリア: カード演出 → 次の章の町へ */
 const CLEAR = {
@@ -2340,7 +2454,7 @@ function mkBg(kind) {
 const bgCache = {};
 const bgOf = k => bgCache[k] || (bgCache[k] = mkBg(k));
 const SEQ_HERO = 0.42, SEQ_ENEMY = 0.52, SEQ_COMP = 0.34;
-const catchRate = e => clamp(SPECIES[e.id].cr * (.2 + .8 * (1 - e.hp / e.maxHp)), .02, .95);
+const catchRate = e => clamp(SPECIES[e.id].cr * (.2 + .8 * (1 - e.hp / e.maxHp)) + (s ? stat().cap : 0), .02, .95);
 const unitStat = u => u.hero ? stat() : compStat(u.sp, u.ref);
 const elFx = el => ({ '火': 'fire', '森': 'leaf', '水': 'water', '氷': 'ice', '光': 'star', '岩': 'rock', '闇': 'dark' })[el] || 'star';
 const Battle = {
@@ -2661,13 +2775,14 @@ const Battle = {
   pop(x, y, t, c, sz) { this.b.pops.push({ x, y, text: t, c, sz, t: 0, life: .85 }); },
   tryFlee() {
     const b = this.b; b.phase = 'anim'; b.stepT = 0; b.seq = []; b.msg = 'ルミナは 逃げ出した！';
-    if (Math.random() < .75) { Snd.se('flee'); this.q(.4, () => { b.phase = 'end'; fadeTo(() => this.leave()); }); return; }
+    if (Math.random() < .75 + stat().flee) { Snd.se('flee'); this.q(.4, () => { b.phase = 'end'; fadeTo(() => this.leave()); }); return; }
     this.q(.36, () => { b.msg = 'しかし 回りこまれてしまった！'; Snd.se('bad'); });
     this.q(.1, () => this.allyPhase());
   },
   win() {
     const b = this.b; if (b.phase === 'win') return;
     b.phase = 'win'; b.tt = 0; b.seq = []; b.ball = null; s.gold += b.gold; for (const k in b.drops) s.items[k] += b.drops[k];
+    const xb = stat().exp; b.expBonus = xb ? Math.round(b.exp * xb) : 0; b.exp += b.expBonus; // けんじゃのメダル
     const before = s.lv, bs = stat(); let exp = s.lv < MAX_LV ? b.exp : 0; s.exp += exp;
     while (s.lv < MAX_LV && s.exp >= LV.exp[s.lv + 1]) s.lv++;
     const ups = [];
@@ -2719,13 +2834,13 @@ const Battle = {
     b.allies.forEach((u, i) => {
       const st = unitStat(u), x = 12 + i * 256, ko = u.ref.hp <= 0;
       panel(x, 8, 250, 64, .9);
-      T(`Lv${u.ref.lv} ${u.name}`, x + 14, 25, 15, ko ? PAL.dim : PAL.gold, 'left', true);
+      fitT(`Lv${u.ref.lv} ${u.name}`, x + 14, 25, b.guardT ? 176 : 222, 15, ko ? PAL.dim : PAL.gold, 'left', true);
       if (b.guardT && !ko) T('ガード', x + 238, 25, 13, '#9cc8f4', 'right', true);
       T('HP', x + 14, 43, 12); bar(x + 36, 37, 110, 11, u.hpS, st.maxHp, u.ref.hp < st.maxHp * .3 ? '#e8804a' : '#7fbf6a', Math.max(u.hpS, u.ref.hp)); T(`${Math.ceil(u.hpS)}/${st.maxHp}`, x + 238, 43, 13, PAL.cream, 'right');
       T('MP', x + 14, 59, 12); bar(x + 36, 53, 110, 11, u.mpS, st.maxMp, '#6a9fd8'); T(`${Math.ceil(u.mpS)}/${st.maxMp}`, x + 238, 59, 13, PAL.cream, 'right');
     });
     // メッセージ
-    if (b.phase !== 'win') { g.font = font(19, true); const tw = g.measureText(b.msg).width, mw = Math.min(tw + 44, 620), sz = tw > 576 ? 15 : 19; rr(170, 78, 620, 34, 12); g.fillStyle = 'rgba(28,35,64,.85)'; g.fill(); T(b.msg, 480, 96, sz, PAL.cream, 'center', true); }
+    if (b.phase !== 'win') { rr(170, 78, 620, 34, 12); g.fillStyle = 'rgba(28,35,64,.85)'; g.fill(); fitT(b.msg, 480, 96, 596, 19, PAL.cream, 'center', true, null, 12); }
     if (b.phase === 'cmd') menuDraw(b.cmd);
     if (b.phase === 'skill' || b.phase === 'item' || b.phase === 'ally') { menuDraw(b.list); drawBack(b.back); }
     if (b.phase === 'target') {
@@ -2792,9 +2907,9 @@ const Battle = {
     const b = this.b, r = b.res, pg = r.pages[r.page];
     if (pg === 'sum') {
       panel(210, 112, 540, 306, .96); T('勝利！', W / 2, 150, 38, PAL.gold, 'center', true);
-      T(`けいけんち  +${r.exp}`, 270, 202, 24); ICON.coin(g, 278, 240, 22); T(`${r.gold} ゴルド`, 300, 240, 24);
+      T(`けいけんち  +${r.exp}`, 270, 202, 24); if (b.expBonus) T(`（メダル +${b.expBonus}）`, 690, 202, 17, '#a8e88a', 'right', true); ICON.coin(g, 278, 240, 22); T(`${r.gold} ゴルド`, 300, 240, 24);
       const dr = Object.keys(r.drops); if (dr.length) T(`${ITEMS[dr[0]].name} を拾った！`, 270, 276, 20, '#a8e88a');
-      if (r.joined.length) { const j = r.joined[0], more = r.joined.length > 1 ? ` ほか${r.joined.length - 1}体` : ''; T(j.dup ? `${SPECIES[j.id].name}の絆 +${j.pts}${more}` : `${SPECIES[j.id].name}が仲間になった！${more}`, 270, 308, 20, '#ffd98a', 'left', true); }
+      if (r.joined.length) { const j = r.joined[0], more = r.joined.length > 1 ? ` ほか${r.joined.length - 1}体` : ''; fitT(j.dup ? `${SPECIES[j.id].name}の絆 +${j.pts}${more}` : `${SPECIES[j.id].name}が仲間になった！${more}`, 270, 308, 456, 20, '#ffd98a', 'left', true); }
       if (s.lv < MAX_LV) { T(`つぎのレベルまで ${LV.exp[s.lv + 1] - s.exp}`, 270, 346, 18, PAL.dim); bar(520, 339, 170, 12, s.exp - LV.exp[s.lv], LV.exp[s.lv + 1] - LV.exp[s.lv], PAL.gold); } else T('レベル最大！', 270, 346, 18, PAL.gold);
       T('タップで次へ', W / 2, 394, 16, PAL.dim, 'center');
     } else if (pg === 'hero') {
@@ -2803,15 +2918,15 @@ const Battle = {
       [['最大HP', u.bs.maxHp, u.ns.maxHp], ['最大MP', u.bs.maxMp, u.ns.maxMp], ['攻撃力', u.bs.atk, u.ns.atk], ['防御力', u.bs.def, u.ns.def]].forEach((row, i) => {
         const y = 186 + i * 40; T(row[0], 270, y, 22); T(String(row[1]), 480, y, 22, PAL.cream, 'right'); T('→', 510, y, 20, PAL.dim, 'center'); T(String(row[2]), 580, y, 24, '#a8e88a', 'right', true); T(`+${row[2] - row[1]}`, 680, y, 18, PAL.gold, 'right');
       });
-      u.skills.forEach((k, i) => T(`新スキル「${SKILLS[k].name}」を覚えた！`, W / 2, 354 + i * 28, 21, '#ffd98a', 'center', true));
+      u.skills.forEach((k, i) => fitT(`新スキル「${SKILLS[k].name}」を覚えた！`, W / 2, 354 + i * 28, 500, 21, '#ffd98a', 'center', true));
       T('タップで次へ', W / 2, 420, 16, PAL.dim, 'center');
     } else {
       panel(210, 112, 540, 306, .96); T('なかまも成長した！', W / 2, 150, 30, PAL.gold, 'center', true);
       r.compUps.forEach((u, i) => {
         const y = 196 + i * 92, sp = eSpr(u.k), z = Math.min(64 / sp.w, 64 / sp.h);
         g.imageSmoothingEnabled = false; g.drawImage(sp.img, 280 - sp.w * z / 2, y + 26 - sp.h * z / 2, sp.w * z, sp.h * z);
-        T(`${SPECIES[u.k].name}  Lv${u.from} → Lv${u.to}`, 330, y + 12, 22, PAL.cream, 'left', true);
-        if (u.skills.length) T(`新スキル「${u.skills.map(q => q.n).join('」「')}」を覚えた！`, 330, y + 44, 18, '#ffd98a', 'left', true);
+        fitT(`${SPECIES[u.k].name}  Lv${u.from} → Lv${u.to}`, 330, y + 12, 400, 22, PAL.cream, 'left', true);
+        if (u.skills.length) fitT(`新スキル「${u.skills.map(q => q.n).join('」「')}」を覚えた！`, 330, y + 44, 400, 18, '#ffd98a', 'left', true);
       });
       T('タップで次へ', W / 2, 394, 16, PAL.dim, 'center');
     }
@@ -2820,13 +2935,15 @@ const Battle = {
 
 /* ============ メニュー ============ */
 const fmtTime = t => { t = Math.floor(t); const h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, c = String(t % 60).padStart(2, '0'); return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + c; };
-const PAUSE_TABS = [['status', 'ステータス'], ['party', 'なかま'], ['item', 'アイテム'], ['book', 'ずかん'], ['gacha', 'ガチャ'], ['gem', 'ジェム'], ['ach', '実績'], ['daily', 'たのみごと'], ['save', 'セーブ'], ['title', 'タイトルへ']];
+const PAUSE_TABS = [['status', 'ステータス'], ['equip', 'そうび'], ['party', 'なかま'], ['item', 'アイテム'], ['book', 'ずかん'], ['gacha', 'ガチャ'], ['gem', 'ジェム'], ['ach', '実績'], ['daily', 'たのみごと'], ['save', 'セーブ'], ['title', 'タイトルへ']];
+const PAUSE_ROWH = 54;
 function openPause() {
-  const tabs = mkMenu(PAUSE_TABS.map(t => ({ key: t[0], label: t[1] })), { x: 18, y: 76, w: 94, rowH: 66, gap: 8, cols: 2, center: true, sz: 16 });
+  const tabs = mkMenu(PAUSE_TABS.map(t => ({ key: t[0], label: t[1] })), { x: 18, y: 76, w: 94, rowH: PAUSE_ROWH, gap: 8, cols: 2, center: true, sz: 16 });
   const closeBtn = backButton(18, 450, 196, 72);
   const big = label => mkMenu([{ label }], { x: 396, y: 370, w: 380, rowH: 74, center: true, sz: 25 });
   const L = {
-    kind: 'pause', focus: 'tabs', list: null, msg: '',
+    kind: 'pause', focus: 'tabs', list: null, msg: '', tabs,
+    setTab(i) { tabs.sel = clamp(i, 0, tabs.items.length - 1); this.msg = ''; this.rebuild(); this.focus = i === 0 ? 'tabs' : 'list'; },
     tab() { return tabs.items[tabs.sel].key; },
     rebuild() {
       const t = this.tab();
@@ -2841,6 +2958,7 @@ function openPause() {
       } else if (t === 'ach') {
         this.list = this.alist || (this.alist = mkMenu(ACHS.map(q => ({ key: q.id, label: '' })), { x: 246, y: 122, w: 336, rowH: 48, cols: 2, gap: 8, flat: true, sz: 1, per: 14, pager: { x: 650, y: 82, span: 280, w: 56, h: 32 } }));
       } else if (t === 'party') this.list = big('なかまを入れかえる');
+      else if (t === 'equip') this.list = big('そうびを変える');
       else if (t === 'gacha') this.list = big('星屑ガチャへ');
       else if (t === 'gem') this.list = big('ジェムショップへ');
       else if (t === 'save') this.list = big('ここにセーブする');
@@ -2877,6 +2995,7 @@ function openPause() {
       const t = this.tab();
       if (t === 'item') this.useItem(this.list.items[i].key);
       else if (t === 'party') { Snd.se('ok'); openParty(); }
+      else if (t === 'equip') { Snd.se('ok'); openEquip(); }
       else if (t === 'gacha') { Snd.se('ok'); openGacha(); }
       else if (t === 'gem') { Snd.se('ok'); openGemShop(); }
       else if (t === 'save') { Snd.se('ok'); writeSave(false); this.msg = `セーブしました（${fmtTime(s.time)}）`; }
@@ -2907,7 +3026,7 @@ function openPause() {
       panel(226, 76, 718, 448, .9);
       menuDraw(tabs); drawBack(closeBtn, 'とじる');
       const t = this.tab(), st = stat();
-      ({ status: () => this.drawStatus(st), item: () => this.drawItems(), book: () => this.drawBook(), party: () => this.drawParty(), gacha: () => this.drawGacha(), gem: () => this.drawGem(), ach: () => this.drawAch(), daily: () => this.drawDaily(), save: () => this.drawSave(), title: () => this.drawTitle() })[t]();
+      ({ status: () => this.drawStatus(st), equip: () => this.drawEquip(st), item: () => this.drawItems(), book: () => this.drawBook(), party: () => this.drawParty(), gacha: () => this.drawGacha(), gem: () => this.drawGem(), ach: () => this.drawAch(), daily: () => this.drawDaily(), save: () => this.drawSave(), title: () => this.drawTitle() })[t]();
       if (this.focus === 'list' && this.list && (t === 'item' || t === 'book' || t === 'ach')) { T('Bでタブにもどる', 930, 508, 14, PAL.dim, 'right'); }
     },
     drawStatus(st) {
@@ -2916,8 +3035,9 @@ function openPause() {
       const nxt = s.lv < MAX_LV ? LV.exp[s.lv + 1] - s.exp : 0; T(s.lv < MAX_LV ? `次まで ${nxt} EXP` : 'レベル最大', 316, 326, 16, PAL.dim, 'center');
       const row = (lb, v, y) => { T(lb, 420, y, 21, PAL.dim); T(v, 660, y, 22, PAL.cream, 'right', true); };
       row('HP', `${s.hp} / ${st.maxHp}`, 118); row('MP', `${s.mp} / ${st.maxMp}`, 152); row('攻撃力', String(st.atk), 186); row('防御力', String(st.def), 220);
-      ICON.sword(g, 438, 262, 28, WEAPONS[s.weapon].col); T(WEAPONS[s.weapon].name, 462, 262, 21); T(`+${WEAPONS[s.weapon].atk}`, 660, 262, 18, PAL.gold, 'right');
-      ICON.armor(g, 438, 298, 26); T(ARMORS[s.armor].name, 462, 298, 21); T(`+${ARMORS[s.armor].def}`, 660, 298, 18, PAL.gold, 'right');
+      SLOTS.forEach(([key], i) => { const id = key === 'acc' ? s.acc : s[key], d = gearDef(id), y = 254 + i * 30;
+        if (d) drawGearIcon(id, 438, y, 26); else iconFor('ring', 438, y, 22);
+        fitT(d ? d.name : 'アクセサリなし', 460, y, 140, 19, d ? PAL.cream : PAL.dim); if (d) fitT(effText(d, true), 676, y, 72, 15, PAL.gold, 'right', false, null, 11); });
       T('スキル', 700, 118, 19, PAL.dim);
       SKILL_ORDER.forEach((k, i) => { const q = SKILLS[k], ok = s.lv >= q.lv; T(q.name, 700, 148 + i * 28, 18, ok ? PAL.cream : 'rgba(244,231,200,.4)'); T(ok ? `MP${q.mp}` : `Lv${q.lv}`, 920, 148 + i * 28, 15, ok ? PAL.gold : 'rgba(244,231,200,.4)', 'right'); });
       g.fillStyle = 'rgba(244,231,200,.2)'; g.fillRect(250, 350, 670, 2);
@@ -2964,10 +3084,19 @@ function openPause() {
       T(`属性 ${e.el}`, x + 8, y + 116, 20, EL_COL[e.el], 'left', true); T(`弱点 ${e.weak}`, x + 120, y + 116, 20, EL_COL[e.weak], 'left', true); if (sp) T(sp.role, x + 240, y + 116, 18, PAL.cream); if (sp && sp.hab) T(`すみか ${sp.hab}`, 924, y + 116, 17, PAL.dim, 'right');
       wrap(e.desc, 660, 19).forEach((l, i) => T(l, x + 8, y + 156 + i * 26, 19, PAL.cream));
     },
+    drawEquip(st) {
+      T('ルミナのそうび', 586, 112, 24, PAL.gold, 'center', true);
+      SLOTS.forEach(([key, nm], i) => { const id = key === 'acc' ? s.acc : s[key], d = gearDef(id), y = 160 + i * 40;
+        T(nm, 290, y, 17, PAL.dim); if (d) drawGearIcon(id, 410, y, 26); fitT(d ? d.name : 'なし', 432, y, 240, 21, d ? PAL.cream : PAL.dim, 'left', true); if (d) fitT(effText(d, true), 900, y, 210, 17, PAL.gold, 'right', true, null, 12); });
+      T(`攻撃力 ${st.atk}　防御力 ${st.def}　最大HP ${st.maxHp}　最大MP ${st.maxMp}`, 586, 296, 18, PAL.cream, 'center', true);
+      const ex = [st.exp && `EXP+${Math.round(st.exp * 100)}%`, st.cap && `捕獲率+${Math.round(st.cap * 100)}%`, st.flee && `にげる ${Math.round((.75 + st.flee) * 100)}%`].filter(Boolean);
+      T(ex.length ? `とくしゅ効果: ${ex.join(' / ')}` : `所持している装備 ${Object.keys(s.gear).length}こ`, 586, 330, 16, ex.length ? '#a8e88a' : PAL.dim, 'center');
+      this.list && menuDraw(this.list);
+    },
     drawParty() {
       T('なかま', 586, 120, 26, PAL.gold, 'center', true);
       const ks = s.party;
-      T(`出撃: ルミナ${ks.map(k => ' / ' + SPECIES[k].name).join('')}`, 586, 170, 20, PAL.cream, 'center', true);
+      fitT(`出撃: ルミナ${ks.map(k => ' / ' + SPECIES[k].name).join('')}`, 586, 170, 660, 20, PAL.cream, 'center', true);
       T(`連れている仲間 ${compCount()} / ${COMP_ORDER.length} 種`, 586, 210, 19, PAL.cream, 'center');
       T('ほし玉で弱らせたモンスターを仲間にしたり、', 586, 262, 18, PAL.dim, 'center'); T('ガチャで出会ったりできる。宿屋でも入れかえできる。', 586, 290, 18, PAL.dim, 'center');
       this.list && menuDraw(this.list);
@@ -2996,7 +3125,7 @@ function openPause() {
         const on = a.ach[q.id], r = cell(m, i), x = r.x, y = r.y;
         rr(x, y, 336, 48, 8); g.fillStyle = on ? 'rgba(63,91,60,.7)' : 'rgba(255,255,255,.05)'; g.fill();
         if (this.focus === 'list' && i === m.sel) { g.lineWidth = 2; g.strokeStyle = PAL.gold; g.stroke(); }
-        T(q.name, x + 12, y + 16, 16, on ? '#a8e88a' : PAL.cream, 'left', true); T(q.desc, x + 12, y + 37, 13, PAL.dim);
+        fitT(q.name, x + 12, y + 16, 250, 16, on ? '#a8e88a' : PAL.cream, 'left', true); fitT(q.desc, x + 12, y + 37, 312, 13, PAL.dim, 'left', false, null, 11);
         T(on ? '達成' : `◆${q.gems}`, x + 324, y + 16, 15, on ? '#a8e88a' : PAL.gold, 'right', true);
       });
     },
@@ -3006,7 +3135,7 @@ function openPause() {
       d.ids.forEach((id, i) => {
         const q = DAILY_POOL.find(p => p.id === id), y = 146 + i * 104, p = d.prog[id] || 0, done = d.done[id];
         rr(250, y, 670, 92, 10); g.fillStyle = done ? 'rgba(63,91,60,.7)' : 'rgba(255,255,255,.06)'; g.fill();
-        T(q.text, 270, y + 28, 21, done ? '#a8e88a' : PAL.cream, 'left', true); T(q.gems ? `ジェム ${q.gems}` : `${q.gold} G`, 904, y + 28, 19, PAL.gold, 'right', true);
+        fitT(q.text, 270, y + 28, 500, 21, done ? '#a8e88a' : PAL.cream, 'left', true); T(q.gems ? `ジェム ${q.gems}` : `${q.gold} G`, 904, y + 28, 19, PAL.gold, 'right', true);
         bar(270, y + 58, 520, 12, p, q.n, done ? '#a8e88a' : PAL.gold); T(done ? '達成！' : `${p} / ${q.n}`, 904, y + 64, 16, PAL.cream, 'right');
       });
       T('達成すると報酬は自動で受け取れます', 586, 484, 16, PAL.dim, 'center');
@@ -3025,16 +3154,15 @@ function openPause() {
 
 /* ============ ショップ ============ */
 function openShop(kind, town = 'village') {
-  const stock = (SHOP[town] || SHOP.village)[kind], many = stock.length > 5;
-  const info = k => ITEMS[k] ? { type: 'item', d: ITEMS[k] } : WEAPONS[k] ? { type: 'weapon', d: WEAPONS[k] } : { type: 'armor', d: ARMORS[k] };
-  const m = mkMenu([], { x: 18, y: 76, w: 552, rowH: many ? 54 : 62, gap: many ? 6 : 8, sz: 22, confirmTap: true }), close = backButton(18, 452, 200, 70);
+  const stock = (SHOP[town] || SHOP.village)[kind], many = stock.length > 6;
+  const info = k => ITEMS[k] ? { type: 'item', d: ITEMS[k] } : { type: gearSlot(k), d: gearDef(k) };
+  const m = mkMenu([], { x: 18, y: 76, w: 552, rowH: stock.length > 5 ? 54 : 62, gap: stock.length > 5 ? 6 : 8, sz: 22, confirmTap: true, per: many ? 6 : 0, pager: many ? { x: 236, y: 462, span: 334, w: 70, h: 52 } : null }), close = backButton(18, 452, 200, 70);
   const buyBtn = { x: 600, y: 442, w: 340, h: 80 };
   const refresh = () => {
     m.items = stock.map(k => {
-      const q = info(k), d = q.d; let dis = s.gold < d.price, r = `${d.price}G`, rc;
-      if (q.type === 'weapon' && d.tier <= WEAPONS[s.weapon].tier) { dis = true; r = d === WEAPONS[s.weapon] ? 'そうび中' : '持っている'; }
-      if (q.type === 'armor' && d.tier <= ARMORS[s.armor].tier) { dis = true; r = d === ARMORS[s.armor] ? 'そうび中' : '持っている'; }
-      return { key: k, label: d.name, r, disabled: dis, icon: q.type === 'weapon' ? 'sword' : q.type === 'armor' ? 'armor' : d.icon };
+      const q = info(k), d = q.d; let dis = s.gold < d.price, r = `${d.price}G`;
+      if (q.type !== 'item' && s.gear[k]) { dis = true; r = s[q.type] === k ? 'そうび中' : '持っている'; }
+      return { key: k, label: d.name, r, disabled: dis, icon: q.type === 'item' ? d.icon : gearIcon(k) };
     });
   };
   refresh();
@@ -3042,42 +3170,135 @@ function openShop(kind, town = 'village') {
     kind: 'shop', msg: '', m,
     buy() {
       const it = m.items[m.sel], k = it.key, q = info(k), d = q.d;
-      if (it.disabled) { Snd.se('bad'); this.msg = s.gold < d.price ? 'ゴルドが足りない……' : ''; return; }
+      if (it.disabled) { Snd.se('bad'); this.msg = s.gold < d.price && !s.gear[k] ? 'ゴルドが足りない……' : ''; return; }
       s.gold -= d.price; Snd.se('buy');
-      if (q.type === 'item') { s.items[k]++; this.msg = `${d.name}を買った！`; }
-      else if (q.type === 'weapon') { s.weapon = k; this.msg = `${d.name}を装備した！`; }
-      else { s.armor = k; this.msg = `${d.name}を装備した！`; }
-      refresh(); writeSave(true);
+      if (q.type === 'item') { s.items[k]++; this.msg = `${d.name}を買った！`; refresh(); writeSave(true); return; }
+      gainGear(k); this.msg = `${d.name}を手に入れた！`; refresh(); writeSave(true);
+      const slot = q.type, prev = s[slot];
+      askBox(`${d.name}を いま装備する？\n（もとの装備は所持品にのこります。メニューの「そうび」でいつでも変えられる）`, [
+        { label: 'そうびする', fn: () => { equip(slot, k); this.msg = `${d.name}を装備した！`; refresh(); writeSave(true); } },
+        { label: 'あとで', fn: () => { this.msg = `${d.name}は所持品に入れた`; } },
+      ]);
     },
     update() {
       if (Inp.e.b || Inp.e.menu || (Inp.tap && inRect(Inp.tap, close))) { Inp.tap = null; Snd.se('cancel'); Scene.pop(); return; }
       if (Inp.tap && inRect(Inp.tap, buyBtn)) { Inp.tap = null; this.buy(); return; }
-      const was = m.sel, it = m.items[m.sel];
+      const was = m.sel;
       if (Inp.e.a) { Inp.e.a = 0; this.buy(); return; }
-      if (Inp.tap) {
-        for (let i = 0; i < m.items.length; i++) if (inRect(Inp.tap, cell(m, i))) { if (i === m.sel) this.buy(); else { m.sel = i; this.msg = ''; Snd.se('cursor'); } break; }
+      if (Inp.tap && !pagerTap(m)) {
+        const [pa, pz] = pageRange(m);
+        for (let i = pa; i < pz; i++) if (inRect(Inp.tap, cell(m, i))) { if (i === m.sel) this.buy(); else { m.sel = i; this.msg = ''; Snd.se('cursor'); } break; }
         Inp.tap = null; return;
       }
       menuUpdate(m); if (m.sel !== was) this.msg = '';
     },
     draw() {
       g.fillStyle = 'rgba(20,26,48,.96)'; g.fillRect(0, 0, W, H);
-      T(town === 'village' ? (kind === 'item' ? '道具屋ララ' : '鍛冶屋ゴンザ') : TOWNS[town][kind === 'item' ? 'shop' : 'gear'][3], 28, 40, 26, PAL.gold, 'left', true);
+      fitT(town === 'village' ? (kind === 'item' ? '道具屋ララ' : '鍛冶屋ゴンザ') : TOWNS[town][kind === 'item' ? 'shop' : 'gear'][3], 28, 40, 200, 26, PAL.gold, 'left', true);
       ICON.coin(g, 240, 40, 24); T(`${s.gold} G`, 262, 40, 24, PAL.cream, 'left', true);
       menuDraw(m); drawBack(close, 'やめる');
       panel(586, 76, 358, 356, .9);
-      const it = m.items[m.sel], q = info(it.key), d = q.d, st = stat(); T(d.name, 606, 112, 24, PAL.gold, 'left', true);
-      wrap(d.desc, 320, 19).forEach((l, i) => T(l, 606, 150 + i * 26, 19));
-      if (q.type === 'weapon') { const cur = WEAPONS[s.weapon], na = st.atk - cur.atk + d.atk; T('攻撃力', 606, 240, 21, PAL.dim); T(`${st.atk} → `, 760, 240, 22, PAL.cream, 'right'); T(String(na), 800, 240, 26, na > st.atk ? '#a8e88a' : PAL.dim, 'left', true); }
-      if (q.type === 'armor') { const cur = ARMORS[s.armor], na = st.def - cur.def + d.def; T('防御力', 606, 240, 21, PAL.dim); T(`${st.def} → `, 760, 240, 22, PAL.cream, 'right'); T(String(na), 800, 240, 26, na > st.def ? '#a8e88a' : PAL.dim, 'left', true); }
+      const it = m.items[m.sel], q = info(it.key), d = q.d, st = stat(); fitT(d.name, 606, 112, 318, 24, PAL.gold, 'left', true);
+      wrap(d.desc, 320, 18).slice(0, 3).forEach((l, i) => T(l, 606, 146 + i * 24, 18));
+      const cmp = (lb, a, b2, y) => { T(lb, 606, y, 20, PAL.dim); T(`${a} → `, 800, y, 21, PAL.cream, 'right'); T(String(b2), 806, y, 24, b2 > a ? '#a8e88a' : b2 < a ? '#e8a08a' : PAL.dim, 'left', true); };
+      if (q.type !== 'item') {
+        const ns = stat({ [q.type]: it.key }), sl = SLOTS.find(z => z[0] === q.type);
+        T(`${sl[1]}  ${effText(d)}`, 606, 226, 18, PAL.gold, 'left', true);
+        if (ns.atk !== st.atk || q.type === 'weapon') cmp('攻撃力', st.atk, ns.atk, 256);
+        if (ns.def !== st.def || q.type === 'armor') cmp('防御力', st.def, ns.def, ns.atk !== st.atk || q.type === 'weapon' ? 284 : 256);
+        if (q.type === 'acc' && ns.atk === st.atk && ns.def === st.def) { const cur = ACCS[s.acc]; fitT(`いまの装備: ${cur ? cur.name + '（' + effText(cur, true) + '）' : 'なし'}`, 606, 256, 318, 16, PAL.cream); }
+      }
       if (q.type === 'item') T(`持っている数  ${s.items[it.key]}`, 606, 240, 21);
-      T(this.msg, 606, 300, 20, '#ffd98a', 'left', true);
+      fitT(this.msg, 606, 318, 320, 19, '#ffd98a', 'left', true);
       T(`HP ${s.hp}/${st.maxHp}　MP ${s.mp}/${st.maxMp}`, 606, 400, 17, PAL.dim);
       rr(buyBtn.x, buyBtn.y, buyBtn.w, buyBtn.h, 12); g.fillStyle = it.disabled ? 'rgba(90,80,80,.8)' : PAL.terra; g.fill(); g.strokeStyle = PAL.gold; g.lineWidth = 3; g.stroke();
-      T(it.disabled && it.r !== `${d.price}G` ? it.r : `かう（${d.price}G）`, buyBtn.x + buyBtn.w / 2, buyBtn.y + buyBtn.h / 2, 26, it.disabled ? 'rgba(244,231,200,.6)' : PAL.cream, 'center', true);
+      fitBox(it.disabled && it.r !== `${d.price}G` ? it.r : `かう（${d.price}G）`, buyBtn, 26, it.disabled ? 'rgba(244,231,200,.6)' : PAL.cream, true, 14);
     },
   };
   Scene.push(L);
+}
+
+/* ============ そうび（ルミナの武器・よろい・アクセサリ） ============ */
+function openEquip() {
+  const slots = mkMenu(SLOTS.map(z => ({ key: z[0], label: '' })), { x: 18, y: 76, w: 420, rowH: 70, gap: 8, flat: true, sz: 1 });
+  const list = mkMenu([], { x: 456, y: 112, w: 488, rowH: 46, gap: 6, sz: 20, confirmTap: true, flat: true, per: 6, pager: { x: 616, y: 474, span: 328, w: 70, h: 48 } });
+  const close = backButton(18, 462, 170, 62);
+  const L = {
+    kind: 'shop', focus: 'slots', msg: '', slots, list,
+    slot() { return SLOTS[slots.sel]; },
+    sync(keepSel) {
+      const [key, , tbl] = this.slot(), cur = key === 'acc' ? s.acc : s[key];
+      const ids = Object.keys(tbl).filter(k => s.gear[k]).sort((a, b) => (tbl[a].tier || 0) - (tbl[b].tier || 0));
+      const items = ids.map(k => ({ key: k, label: tbl[k].name, r: k === cur ? 'そうび中' : effText(tbl[k], true), rc: k === cur ? '#a8e88a' : PAL.gold, icon: gearIcon(k) }));
+      if (key === 'acc') items.unshift({ key: '', label: 'はずす（なし）', r: s.acc ? '' : 'そうび中', rc: '#a8e88a' });
+      const was = list.sel; list.items = items;
+      list.sel = keepSel ? clamp(was, 0, items.length - 1) : Math.max(0, items.findIndex(q => q.key === cur));
+    },
+    preview() { if (this.focus !== 'list') return null; const it = list.items[list.sel]; if (!it) return null; const [key] = this.slot(); return { [key]: it.key }; },
+    put(i) {
+      const [key] = this.slot(), it = list.items[i], cur = key === 'acc' ? s.acc : s[key];
+      if (it.key === cur) { Snd.se('cursor'); this.msg = key === 'acc' && !cur ? 'アクセサリはつけていない' : `${it.label}は もう装備している`; return; }
+      equip(key, it.key); Snd.se('buy'); this.msg = it.key ? `${it.label}を装備した！` : 'アクセサリをはずした';
+      this.sync(true); writeSave(true);
+    },
+    setSlot(i) { slots.sel = clamp(i, 0, SLOTS.length - 1); this.msg = ''; this.sync(); },
+    update() {
+      const e = Inp.e, tap = Inp.tap;
+      if (tap && inRect(tap, close)) { Inp.tap = null; Snd.se('cancel'); Scene.pop(); return; }
+      if (tap) {
+        for (let i = 0; i < slots.items.length; i++) if (inRect(tap, cell(slots, i))) { Inp.tap = null; if (slots.sel !== i) this.setSlot(i); this.focus = 'list'; Snd.se('cursor'); return; }
+        if (tap.x >= 446) { this.focus = 'list'; const i = menuUpdate(list); if (i >= 0) this.put(i); else this.msg = ''; return; }
+        Inp.tap = null; return;
+      }
+      if (this.focus === 'list') {
+        if (e.b) { Snd.se('cancel'); this.focus = 'slots'; return; }
+        const was = list.sel, i = menuUpdate(list); if (list.sel !== was) this.msg = ''; if (i >= 0) this.put(i);
+        return;
+      }
+      if (e.b || e.menu) { Snd.se('cancel'); Scene.pop(); return; }
+      const was = slots.sel, i = menuUpdate(slots);
+      if (slots.sel !== was) this.setSlot(slots.sel);
+      if (i >= 0) { Snd.se('ok'); this.focus = 'list'; }
+    },
+    draw() {
+      g.fillStyle = '#17203a'; g.fillRect(0, 0, W, H);
+      T('そうび', 28, 38, 28, PAL.gold, 'left', true); T(`ルミナ  Lv${s.lv}`, 130, 40, 19, PAL.cream, 'left', true);
+      slots.items.forEach((it, i) => {
+        const r = cell(slots, i), [key, nm, tbl] = SLOTS[i], id = key === 'acc' ? s.acc : s[key], d = tbl[id], sel = i === slots.sel;
+        rr(r.x, r.y, r.w, r.h, 10); g.fillStyle = sel ? 'rgba(184,89,58,.85)' : 'rgba(255,255,255,.06)'; g.fill(); g.lineWidth = sel ? 3 : 1; g.strokeStyle = sel ? PAL.gold : 'rgba(244,231,200,.35)'; g.stroke();
+        if (d) drawGearIcon(id, r.x + 32, r.y + r.h / 2, 34); else iconFor(key === 'acc' ? 'ring' : 'sword', r.x + 32, r.y + r.h / 2, 30);
+        T(nm, r.x + 62, r.y + 20, 15, sel ? '#ffe9a8' : PAL.dim, 'left', true);
+        if (d) fitT(effText(d, true), r.x + r.w - 14, r.y + 20, 250, 16, PAL.gold, 'right', true, null, 13);
+        fitT(d ? d.name : 'なし', r.x + 62, r.y + 47, r.w - 78, 21, d ? PAL.cream : PAL.dim, 'left', true);
+      });
+      // 能力（選択中の候補があれば 現在→変更後）
+      const st = stat(), pv = this.preview(), ns = pv ? stat(pv) : st;
+      panel(18, 316, 420, 136, .9);
+      const row = (lb, a, b2, x, y, pct) => {
+        T(lb, x, y, 17, PAL.dim);
+        const f = v => pct ? (v ? `+${Math.round(v * 100)}%` : '－') : String(v);
+        if (a === b2) T(f(a), x + 180, y, 20, PAL.cream, 'right', true);
+        else { T(`${f(a)}→`, x + 132, y, 17, PAL.cream, 'right'); T(f(b2), x + 136, y, 20, b2 > a ? '#a8e88a' : '#e8a08a', 'left', true); }
+      };
+      row('最大HP', st.maxHp, ns.maxHp, 36, 340, 0); row('最大MP', st.maxMp, ns.maxMp, 236, 340, 0);
+      row('攻撃力', st.atk, ns.atk, 36, 370, 0); row('防御力', st.def, ns.def, 236, 370, 0);
+      row('EXP', st.exp, ns.exp, 36, 400, 1); row('捕獲率', st.cap, ns.cap, 236, 400, 1);
+      T('にげる', 36, 430, 17, PAL.dim); { const a = Math.round((.75 + st.flee) * 100), b2 = Math.round((.75 + ns.flee) * 100); if (a === b2) T(`${a}%`, 216, 430, 20, PAL.cream, 'right', true); else { T(`${a}%→`, 168, 430, 17, PAL.cream, 'right'); T(`${b2}%`, 172, 430, 20, b2 > a ? '#a8e88a' : '#e8a08a', 'left', true); } }
+      T(`HP ${s.hp}/${st.maxHp}  MP ${s.mp}/${st.maxMp}`, 420, 430, 15, PAL.dim, 'right');
+      // 所持品リスト
+      const [key, nm] = this.slot();
+      T(`${nm}の所持品`, 460, 92, 19, PAL.gold, 'left', true); T(`${list.items.filter(q => q.key).length}こ`, 940, 92, 16, PAL.dim, 'right');
+      if (!list.items.length) T('まだ持っていない', 700, 220, 20, PAL.dim, 'center');
+      menuDraw(list);
+      const it = this.focus === 'list' && list.items[list.sel];
+      if (it && it.key) { const d = gearDef(it.key); wrap(d.desc, 480, 15).slice(0, 2).forEach((l, i) => T(l, 460, 438 + i * 20, 15, PAL.cream)); }
+      else if (pageCount(list) < 2) T(`${key === 'acc' ? 'ガチャや宝箱、後半の町で手に入る' : '店・ガチャ・宝箱で手に入る'}`, 700, 446, 15, PAL.dim, 'center');
+      if (this.msg) fitT(this.msg, 200, 492, 400, 18, '#ffd98a', 'left', true);
+      else fitT(this.focus === 'list' ? (Inp.touch ? 'もう一度タップで装備' : 'Zで装備 / Xで枠にもどる') : '枠をえらぶと所持品が出る', 200, 492, 400, 15, PAL.dim, 'left');
+      drawBack(close);
+    },
+  };
+  L.sync(); Scene.push(L); return L;
 }
 
 /* ============ 星屑ガチャ ============ */
@@ -3086,11 +3307,10 @@ function rewardOf(q) { // 抽選結果を反映して表示用データを返す
     const j = joinComp(q.id, 'gacha');
     return { kind:'comp', id:q.id, rare:q.cat === 'rare', name:SPECIES[q.id].name, note:j.dup ? `絆+${j.pts}${j.up ? ` 絆Lv${j.bond}！` : ''}` : 'NEW!', isNew:!j.dup };
   }
-  if (q.cat === 'gear') {
-    const wp = WEAPONS[q.id], d = wp || ARMORS[q.id], cur = wp ? WEAPONS[s.weapon] : ARMORS[s.armor];
-    const r = { kind:'gear', id:q.id, wp:!!wp, name:d.name };
-    if (d.tier > cur.tier) { if (wp) s.weapon = q.id; else s.armor = q.id; r.note = 'そうびした！'; r.isNew = true; }
-    else { const v = Math.round(d.price / 2); s.gold += v; r.note = `${v}Gに交換`; }
+  if (q.cat === 'gear') { // 装備は所持品へ（自動では装備しない）。すでに持っているものだけゴルドに交換
+    const d = gearDef(q.id), r = { kind:'gear', id:q.id, wp:!!WEAPONS[q.id], name:d.name };
+    if (gainGear(q.id)) { r.note = 'NEW! 所持品へ'; r.isNew = true; }
+    else { const v = Math.round((d.price || 400) / 2); s.gold += v; r.note = `持っている→${v}G`; }
     return r;
   }
   s.items[q.id] = (s.items[q.id] || 0) + 1;
@@ -3131,11 +3351,10 @@ function drawCard(x, y, w, h, r, shine) {
   rr(x, y, w, h, 12); g.fillStyle = r.rare ? 'rgba(92,66,20,.96)' : 'rgba(28,35,64,.96)'; g.fill(); g.lineWidth = r.rare ? 4 : 2; g.strokeStyle = r.rare ? PAL.gold : 'rgba(244,231,200,.5)'; g.stroke();
   const cx = x + w / 2, cy = y + h * .4, sz = Math.min(w, h) * .56;
   if (r.kind === 'comp') { const sp = eSpr(r.id), k = Math.min(sz / sp.w, sz / sp.h); g.imageSmoothingEnabled = false; g.drawImage(sp.img, cx - sp.w * k / 2, cy - sp.h * k / 2, sp.w * k, sp.h * k); }
-  else if (r.kind === 'gear') { if (r.wp) ICON.sword(g, cx, cy, sz * .8, WEAPONS[r.id].col); else ICON.armor(g, cx, cy, sz * .8); }
+  else if (r.kind === 'gear') drawGearIcon(r.id, cx, cy, sz * .8);
   else iconFor(ITEMS[r.id].icon, cx, cy, sz * .8);
-  const fs = clamp(Math.floor((w - 12) / Math.max(5, r.name.length)), 11, 22);
-  T(r.name, cx, y + h - 46, fs, r.rare ? '#ffe9a8' : PAL.cream, 'center', true);
-  T(r.note, cx, y + h - 20, 15, r.isNew ? '#a8e88a' : PAL.gold, 'center', true);
+  fitT(r.name, cx, y + h - 46, w - 16, w > 200 ? 22 : 17, r.rare ? '#ffe9a8' : PAL.cream, 'center', true, null, 11);
+  fitT(r.note, cx, y + h - 20, w - 16, 15, r.isNew ? '#a8e88a' : PAL.gold, 'center', true, null, 11);
   if (r.rare) T('★レア', x + 10, y + 16, 14, '#ffe9a8', 'left', true);
 }
 function openRates() {
@@ -3155,8 +3374,8 @@ function openRates() {
       for (const [r, d] of [[R.prev, -1], [R.next, 1]]) { rr(r.x, r.y, r.w, r.h, 10); g.fillStyle = 'rgba(63,91,60,.95)'; g.fill(); g.lineWidth = 2; g.strokeStyle = PAL.cream; g.stroke(); const cx = r.x + r.w / 2, cy = r.y + r.h / 2; g.fillStyle = PAL.cream; g.beginPath(); g.moveTo(cx - d * 8, cy - 11); g.lineTo(cx + d * 8, cy); g.lineTo(cx - d * 8, cy + 11); g.closePath(); g.fill(); }
       T(`${pg + 1} / ${pages}`, 834, 34, 18, PAL.cream, 'center', true);
       GACHA.slice(pg * per, pg * per + per).forEach((q, j) => {
-        const col = j < 10 ? 0 : 1, y = 84 + (j % 10) * 34, x = 40 + col * 450, d = q.cat === 'gear' ? (WEAPONS[q.id] || ARMORS[q.id]) : q.cat === 'item' ? ITEMS[q.id] : SPECIES[q.id];
-        T(q.cl, x, y, 16, q.cat === 'rare' ? PAL.gold : PAL.dim); T(d.name, x + 104, y, 19, q.cat === 'rare' ? '#ffe9a8' : PAL.cream); T(`${q.w}%`, x + 400, y, 19, PAL.cream, 'right', true);
+        const col = j < 10 ? 0 : 1, y = 84 + (j % 10) * 34, x = 40 + col * 450, d = q.cat === 'gear' ? gearDef(q.id) : q.cat === 'item' ? ITEMS[q.id] : SPECIES[q.id];
+        T(q.cl, x, y, 16, q.cat === 'rare' ? PAL.gold : PAL.dim); fitT(d.name, x + 104, y, 228, 19, q.cat === 'rare' ? '#ffe9a8' : PAL.cream); T(`${q.w}%`, x + 400, y, 19, PAL.cream, 'right', true);
       });
       T(`天井: ${PITY}回以内に必ずレア仲間が1体出ます（出るとカウントは0に戻ります）。`, 490, 430, 15, PAL.gold, 'center', true);
       T('上記は1回あたりの基本確率（全ページの合計100%）。重複した仲間は絆ポイントに変換。', 490, 454, 15, PAL.dim, 'center');
@@ -3281,7 +3500,7 @@ function openParty() {
       const k = it.key;
       if (s.party.includes(k)) acts.items = [{ label:'控えにもどす', fn:() => { s.party.splice(s.party.indexOf(k), 1); } }];
       else if (s.party.length < MAX_PARTY) acts.items = [{ label:'パーティに入れる', fn:() => { s.party.push(k); } }];
-      else acts.items = s.party.map((p, i) => ({ label:`${SPECIES[p].name}と交代`, fn:() => { s.party[i] = k; } }));
+      else acts.items = s.party.map((p, i) => ({ label:`${SPECIES[p].name}\nと交代`, fn:() => { s.party[i] = k; } }));
     },
     update() {
       const e = Inp.e;
@@ -3309,7 +3528,7 @@ function openParty() {
       T('出撃', 28, 96, 17, PAL.dim);
       ['ルミナ'].concat(s.party.map(k => SPECIES[k].name)).concat(['（空き）', '（空き）']).slice(0, 3).forEach((n, i) => {
         const x = 76 + i * 176; rr(x, 76, 168, 42, 8); g.fillStyle = n === '（空き）' ? 'rgba(255,255,255,.05)' : 'rgba(63,91,60,.9)'; g.fill(); g.strokeStyle = 'rgba(244,231,200,.4)'; g.lineWidth = 1; g.stroke();
-        T(n, x + 84, 97, 16, n === '（空き）' ? PAL.dim : PAL.cream, 'center', true);
+        fitT(n, x + 84, 97, 152, 16, n === '（空き）' ? PAL.dim : PAL.cream, 'center', true);
       });
       if (!grid.items.length) { T('まだ仲間がいない', 300, 260, 22, PAL.dim, 'center'); T('ほし玉やガチャで仲間をふやそう', 300, 296, 18, PAL.dim, 'center'); drawBack(close); return; }
       const [pa, pz] = pageRange(grid); drawPager(grid);
@@ -3319,15 +3538,15 @@ function openParty() {
         rr(r.x, r.y, r.w, r.h, 10); g.fillStyle = sel ? 'rgba(184,89,58,.8)' : 'rgba(255,255,255,.06)'; g.fill(); g.strokeStyle = sel ? PAL.gold : on ? '#a8e88a' : 'rgba(244,231,200,.3)'; g.lineWidth = sel || on ? 3 : 1; g.stroke();
         g.imageSmoothingEnabled = false; g.drawImage(sp.img, r.x + 40 - sp.w * z / 2, r.y + 38 - sp.h * z / 2, sp.w * z, sp.h * z);
         T(`Lv${c.lv}`, r.x + 78, r.y + 22, 16, PAL.cream, 'left', true); if (on) T('出撃中', r.x + 78, r.y + 44, 14, '#a8e88a', 'left', true);
-        T(SPECIES[k].name, r.x + r.w / 2, r.y + 80, 15, SPECIES[k].rare ? '#ffe9a8' : PAL.cream, 'center', true);
+        fitT(SPECIES[k].name, r.x + r.w / 2, r.y + 80, r.w - 14, 15, SPECIES[k].rare ? '#ffe9a8' : PAL.cream, 'center', true);
       });
       const k = grid.items[grid.sel].key, d = SPECIES[k], c = s.comps[k], cs = compStat(k, c), bl = bondLv(k), pts = meta.acct.bonds[k] || 0;
       panel(606, 72, 338, 372, .92);
-      T(d.name, 624, 102, 22, d.rare ? '#ffe9a8' : PAL.gold, 'left', true); T(`Lv${c.lv}`, 926, 102, 20, PAL.cream, 'right', true);
+      fitT(d.name, 624, 102, 226, 22, d.rare ? '#ffe9a8' : PAL.gold, 'left', true); T(`Lv${c.lv}`, 926, 102, 20, PAL.cream, 'right', true);
       T(`${d.role}`, 624, 132, 16, PAL.dim); T(`属性 ${d.el}`, 740, 132, 16, EL_COL[d.el], 'left', true); T(`弱点 ${d.weak}`, 926, 132, 16, EL_COL[d.weak], 'right', true);
       T(`HP ${c.hp}/${cs.maxHp}　MP ${c.mp}/${cs.maxMp}`, 624, 162, 17); T(`攻撃 ${cs.atk}　防御 ${cs.def}`, 624, 188, 17);
       T('スキル', 624, 220, 16, PAL.dim);
-      SP_SK[k].forEach((q, i) => { const ok = c.lv >= q.lv; T(q.n, 624, 246 + i * 26, 17, ok ? PAL.cream : 'rgba(244,231,200,.4)'); T(ok ? `MP${q.mp}` : `Lv${q.lv}`, 926, 246 + i * 26, 15, ok ? PAL.gold : 'rgba(244,231,200,.4)', 'right'); });
+      SP_SK[k].forEach((q, i) => { const ok = c.lv >= q.lv; fitT(q.n, 624, 246 + i * 26, 236, 17, ok ? PAL.cream : 'rgba(244,231,200,.4)'); T(ok ? `MP${q.mp}` : `Lv${q.lv}`, 926, 246 + i * 26, 15, ok ? PAL.gold : 'rgba(244,231,200,.4)', 'right'); });
       T(`絆Lv ${bl}${bl >= BOND_MAX ? '（最大）' : ''}`, 624, 346, 18, '#e9b0c0', 'left', true); T(`全能力 +${Math.round(bl * BOND_STEP * 100)}%`, 926, 346, 16, '#e9b0c0', 'right');
       bar(624, 362, 302, 10, bl >= BOND_MAX ? 1 : pts - BOND_NEED[bl], bl >= BOND_MAX ? 1 : BOND_NEED[bl + 1] - BOND_NEED[bl], '#e9b0c0');
       T(`次のレベルまで ${Math.max(0, c.lv < MAX_LV ? LV.exp[c.lv + 1] - c.exp : 0)} EXP`, 624, 396, 15, PAL.dim);
@@ -3433,7 +3652,7 @@ const Intro = {
 function finishGame() {
   const rate = bookRate();
   meta.cleared = true; if (!meta.best || s.time < meta.best) meta.best = s.time;
-  meta.carry = { lv: s.lv, weapon: s.weapon, armor: s.armor, gold: s.gold, book: s.book, seen: s.seen, caught: s.caught, comps: s.comps, party: s.party };
+  meta.carry = { lv: s.lv, weapon: s.weapon, armor: s.armor, acc: s.acc, gear: s.gear, gold: s.gold, book: s.book, seen: s.seen, caught: s.caught, comps: s.comps, party: s.party };
   s.flags.ended = 1; s.map = 'village'; s.x = 16.5 * TS; s.y = 11.5 * TS; s.dir = 'd'; heal();
   saveMeta(); writeSave(true);
   Scene.set(Ending); Ending.reset(rate); Snd.bgm('ending');
@@ -3532,7 +3751,7 @@ addEventListener('pagehide', () => { if (s && Scene.cur === Field && !Scene.top(
 loadMeta(); resize(); Title.show();
 requestAnimationFrame(frame);
 if (DEBUG) window.__SQ = { Snd, get s() { return s; }, set s(v) { s = v; }, Scene, Field, Battle, Title, Intro, Ending, MAPS, Inp, TL, SOLID, step, render, syncCtl, ENEMIES, LV, stat, get meta() { return meta; },
-  SPECIES, SP_SK, GACHA, GACHA_CLASS, PACKS, ACHS, DAILY_POOL, BOOK_ORDER, PITY, MAX_LV, compStat, joinComp, bondLv, bookRate, catchRate, doPull, rollGacha, dailyEnsure, evt, checkAch, writeSave, readSave, migrate, heal, openGacha, openGemShop, openParty, openPause, openRates, openShop,
+  SPECIES, SP_SK, GACHA, GACHA_CLASS, PACKS, ACHS, DAILY_POOL, BOOK_ORDER, PITY, MAX_LV, compStat, joinComp, bondLv, bookRate, catchRate, doPull, rollGacha, dailyEnsure, evt, checkAch, writeSave, readSave, migrate, heal, openGacha, openGemShop, openParty, openPause, openRates, openShop, openEquip, equip, gainGear, fixGear, ACCS, SLOTS, PAUSE_TABS, PAUSE_ROWH, CHEST_GEAR, BOSS_GEAR, SHOP, openChest, fitLines, fitLog, get fitLogLen() { return fitLog.length; },
   grantGems(n) { meta.acct.gems += n; saveMeta(); }, setToday(d) { todayOverride = d; },
   MAPDEF, TOWNS, CH_WILD, CH_BOSS, BOOK_ORDER, COMP_ORDER, WILD_ORDER, SKILLS, SKILL_ORDER, ITEMS, WEAPONS, ARMORS, shards, chapterNo, chapterClear, Card, routeHop, mapEdges, newState, setup: dbgSetup };
 function dbgSetup(n, o = {}) { // ?debug: 第n章の途中（o.boss で ボス直前）の状態を作る
@@ -3543,7 +3762,7 @@ function dbgSetup(n, o = {}) { // ?debug: 第n章の途中（o.boss で ボス�
   for (let c = 1; c < n; c++) for (const k of seq[c]) f[k] = 1;
   if (o.boss) { f[['', '', 'c2talk', 'c3talk', 'c4talk', 'c5talk'][n]] = 1; if (n === 5) Object.assign(f, { guardDown: 1, shard5: 1, towerOpen: 1 }); }
   s.lv = lv; s.exp = LV.exp[lv];
-  s.weapon = o.weapon || ['', 'star', 'coral', 'sun', 'frost', 'astral'][n]; s.armor = o.armor || ['', 'plate', 'shell', 'desert', 'fur', 'starrobe'][n];
+  s.weapon = o.weapon || ['', 'star', 'coral', 'sun', 'frost', 'astral'][n]; s.armor = o.armor || ['', 'plate', 'shell', 'desert', 'fur', 'starrobe'][n]; s.acc = o.acc || ''; fixGear(s);
   s.gold = 2000; Object.assign(s.items, { herb: 3, hiherb: 5, water: 2, ether: 3, drop: 2, ball: 5 }, o.items || {});
   const party = o.party || [null, ['goblin', 'wolf'], ['crab', 'gull'], ['lizard', 'ldrake'], ['yeti', 'mfox'], ['stag', 'owl']][n];
   for (const k of party) { joinComp(k, 'catch'); const c = s.comps[k]; c.lv = Math.max(1, o.clv || lv - 1); c.exp = LV.exp[c.lv]; }
